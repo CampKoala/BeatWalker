@@ -1,0 +1,45 @@
+{
+    "name": "BeatWalker",
+    "maps": [
+        {
+            "name": "Player Actions",
+            "id": "18930201-3280-4157-bbf5-93d3658bdf02",
+            "actions": [
+                {
+                    "name": "Attack",
+                    "type": "Value",
+                    "id": "392b9352-a96c-436c-8b10-fd8c8caffac5",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "ba71d8bd-2914-4315-a81e-fd3bcd7f5c6d",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Attack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "91360199-0a42-4578-b6db-a7c43212c65a",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Attack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
