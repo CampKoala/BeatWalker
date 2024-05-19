@@ -12,7 +12,6 @@ namespace BeatWalker
 
         private TimingManager _tm;
         private Transform _transform;
-        private Enemy _enemy;
         private BoxCollider2D _lineEnterCollider;
         private BoxCollider2D _lineExitCollider;
 
@@ -21,6 +20,7 @@ namespace BeatWalker
         private Vector2 _endPosition;
         private bool _isGoing;
 
+        public Enemy Enemy { get; private set; }
         public SongTimingConfig.TimingType TimingType { get; private set; }
 
         public void Init(TimingManager timingManager, float tapLength, float startY, float endY, float speed,
@@ -64,7 +64,7 @@ namespace BeatWalker
 
         public void Prepare(SongTimingConfig.Timing timing, Enemy enemy)
         {
-            _enemy = enemy;
+            Enemy = enemy;
             TimingType = timing.Type;
             var length = TimingType switch
             {
@@ -113,7 +113,7 @@ namespace BeatWalker
         {
             gameObject.SetActive(false);
             _tm.Return(this);
-            _enemy = null;
+            Enemy = null;
             _isGoing = false;
         }
     }

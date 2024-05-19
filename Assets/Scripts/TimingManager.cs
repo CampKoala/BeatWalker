@@ -1,10 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using BeatWalker.Config;
 using BeatWalker.Utils;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace BeatWalker
 {
@@ -19,32 +19,26 @@ namespace BeatWalker
     
         private SongTimingConfig _songTimingConfig;
         private Queue<Line> _reserveLines;
-        private Queue<Enemy> _reserveEnemies;
+        private Queue<Enemy> _reserveTapEnemies;
+        private Queue<Enemy> _reserveHoldEnemies;
 
         private float _startTime;
         private int _index;
 
         private Vector2 _playerPosition;
-        private float _enemySpeed;
         private float _lineTravelTime;
-        
-        private bool _isLineEnter;
-        private float _lineReferenceTime;
-        private SongTimingConfig.TimingType _currentLineType;
-        private bool _skipNextLineExit;
 
         private void Awake()
         {
             _songTimingConfig = new SongTimingConfig(song);
             _playerPosition = player.transform.position;
-
             _lineTravelTime = (gameConfig.LineStartY - _playerPosition.y) / gameConfig.LineSpeed;
-            _enemySpeed = (gameConfig.EnemySpawnRadius - gameConfig.EnemyDeathRadius) / _lineTravelTime;
 
-            player.Init(this);
+            player.Init(gameConfig);
             
             _reserveLines = new Queue<Line>(Enumerable.Range(0, reserveCapacity).Select(_ => CreateNewLine()));
-            _reserveEnemies = new Queue<Enemy>(Enumerable.Range(0, reserveCapacity).Select(_ => CreateNewEnemy()));
+            _reserveTapEnemies = new Queue<Enemy>(Enumerable.Range(0, reserveCapacity).Select(_ => CreateNewEnemy(gameConfig.TapEnemy)));
+            _reserveHoldEnemies = new Queue<Enemy>(Enumerable.Range(0, reserveCapacity).Select(_ => CreateNewEnemy(gameConfig.HoldEnemy)));
         }
 
         private void Start()
@@ -57,7 +51,7 @@ namespace BeatWalker
         {
             for (var i = 0; i < batchSize; ++i)
             {
-                if (_index >= _songTimingConfig.Count || _reserveEnemies.Count <= 0 || _reserveLines.Count <= 0)
+                if (_index >= _songTimingConfig.Count || _reserveHoldEnemies.Count <= 0 || _reserveTapEnemies.Count <= 0 || _reserveLines.Count <= 0)
                     break;
 
                 StartCoroutine(NextLine());
@@ -68,10 +62,16 @@ namespace BeatWalker
         {
             var timing = _songTimingConfig[_index++];
             var line = _reserveLines.Dequeue();
-            var enemy = _reserveEnemies.Dequeue();
-
+            var (enemy, config) = timing.Type switch
+            {
+                SongTimingConfig.TimingType.Hold => (_reserveHoldEnemies.Dequeue(), gameConfig.HoldEnemy),
+                SongTimingConfig.TimingType.LeftTap => (_reserveTapEnemies.Dequeue(), gameConfig.TapEnemy),
+                SongTimingConfig.TimingType.RightTap => (_reserveTapEnemies.Dequeue(), gameConfig.TapEnemy),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+                
             line.Prepare(timing, enemy);
-            enemy.Prepare(Vector2Utils.FromPolar(_playerPosition, gameConfig.EnemySpawnRadius, gameConfig.EnemyAngle * (float) timing.Type));
+            enemy.Prepare(Vector2Utils.FromPolar(_playerPosition, config.EnemySpawnRadius, config.EnemyAngle * (float) timing.Type));
 
             yield return new WaitForSeconds(Mathf.Clamp(
                 timing.StartTime - Time.timeSinceLevelLoad - _startTime - _lineTravelTime, 0.0f, float.MaxValue));
@@ -87,7 +87,22 @@ namespace BeatWalker
                 QueueNextLines();
         }
 
-        public void Return(Enemy enemy) => _reserveEnemies.Enqueue(enemy);
+        public void Return(Enemy enemy)
+        {
+            switch (enemy.Type)
+            {
+                case EnemyType.Hold:
+                    _reserveHoldEnemies.Enqueue(enemy);
+                    break;
+                
+                case EnemyType.Tap:
+                    _reserveTapEnemies.Enqueue(enemy);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        } 
 
         private Line CreateNewLine()
         {
@@ -97,61 +112,13 @@ namespace BeatWalker
             return line;
         }
 
-        private Enemy CreateNewEnemy()
+        private Enemy CreateNewEnemy(EnemyConfig config)
         {
-            var obj = Instantiate(gameConfig.EnemyPrefab);
+            var obj = Instantiate(config.EnemyPrefab);
             var enemy = obj.GetComponent<Enemy>();
-            enemy.Init(this, _playerPosition, _enemySpeed);
+            var speed = (config.EnemySpawnRadius - config.EnemyDeathRadius) / _lineTravelTime;
+            enemy.Init(this, _playerPosition, speed, config.Type);
             return enemy;
-        }
-
-        public void OnLineEnter(SongTimingConfig.TimingType type)
-        {
-            _isLineEnter = true;
-            _lineReferenceTime = Time.timeSinceLevelLoad;
-            _currentLineType = type;
-        }
-
-        public void OnLineExit()
-        {
-            if (_skipNextLineExit)
-            {
-                _skipNextLineExit = false;
-                return;
-            }
-            
-            _isLineEnter = false;
-            _lineReferenceTime = Time.timeSinceLevelLoad;
-        }
-
-        public void OnAttack(InputValue button)
-        {
-            var attackTime = Time.timeSinceLevelLoad - _lineReferenceTime;
-            
-            // Ignore Invalid Inputs
-            if (_isLineEnter != button.isPressed || (_currentLineType != SongTimingConfig.TimingType.Hold && !button.isPressed))
-                return;
-            
-            if (attackTime > gameConfig.MissedTimeOffset)
-            {
-                _skipNextLineExit = _isLineEnter && _currentLineType == SongTimingConfig.TimingType.Hold;
-                Debug.Log($"Missed { (_isLineEnter ? "Line Enter": "Line Exit") }");
-                return;
-            }
-
-            if (attackTime > gameConfig.LateTimeOffset)
-            {
-                Debug.Log("Late");
-                return;
-            }
-
-            if (attackTime > gameConfig.EarlyTime)
-            {
-                Debug.Log("Perfect");
-                return;
-            }
-
-            Debug.Log("Early");
         }
     }
 }

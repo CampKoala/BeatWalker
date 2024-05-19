@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2aa5f7fc8af24dee90c051cac3b42f21, type: 3}
+  m_Name: Enemy2Config
+  m_EditorClassIdentifier: 
+  enemyPrefab: {fileID: 7833092012710998899, guid: 9414833995e0e2443850a849fe60def9, type: 3}
+  enemyAngle: 0
+  enemySpawnRadius: 14
+  enemyDeathRadius: 5
+  type: 0

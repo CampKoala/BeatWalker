@@ -23,7 +23,5 @@ MonoBehaviour:
   earlyTime: 0.25
   perfectTime: 0.25
   lateTime: 0.25
-  enemyPrefab: {fileID: 1580337856544023959, guid: 8ac808815c8afa2439a927734ce0b124, type: 3}
-  enemyAngle: 45
-  enemySpawnRadius: 14
-  enemyDeathRadius: 5
+  holdEnemy: {fileID: 11400000, guid: 152a609c6ce6589499445b27403be529, type: 2}
+  tapEnemy: {fileID: 11400000, guid: 38c1b02d994617249a58f4afe862dc20, type: 2}

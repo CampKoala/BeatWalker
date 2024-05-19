@@ -42,18 +42,12 @@ namespace BeatWalker.Config
         public float LateTimeOffset => earlyTime + perfectTime;
         public float MissedTimeOffset => LateTimeOffset + lateTime;
 
-        
+
         [Header("Enemies")]
-        [SerializeField] private GameObject enemyPrefab;
-        public GameObject EnemyPrefab => enemyPrefab;
+        [SerializeField] private EnemyConfig holdEnemy;
+        public EnemyConfig HoldEnemy => holdEnemy;
         
-        [SerializeField] private float enemyAngle;
-        public float EnemyAngle => enemyAngle;
-        
-        [SerializeField] private float enemySpawnRadius;
-        public float EnemySpawnRadius => enemySpawnRadius;
-        
-        [SerializeField] private float enemyDeathRadius;
-        public float EnemyDeathRadius => enemyDeathRadius;
+        [SerializeField] private EnemyConfig tapEnemy;
+        public EnemyConfig TapEnemy => tapEnemy;
     }
 }
