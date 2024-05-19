@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 071391f0db184a75b008dc8dd571c510, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: 
+  earlyPoints: 0
+  perfectPoints: 0
+  latePoints: 0
+  linePrefab: {fileID: 4971406917872013032, guid: 090ddd487bea49c4798076e3c460b478, type: 3}
+  tapLineLength: 0.5
+  lineStartY: 6
+  lineEndY: -6
+  lineSpeed: 4
+  earlyTime: 0.25
+  perfectTime: 0.25
+  lateTime: 0.25
+  enemyPrefab: {fileID: 1580337856544023959, guid: 8ac808815c8afa2439a927734ce0b124, type: 3}
+  enemyAngle: 45
+  enemySpawnRadius: 14
+  enemyDeathRadius: 5

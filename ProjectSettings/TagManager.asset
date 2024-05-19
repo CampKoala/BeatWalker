@@ -6,7 +6,7 @@ TagManager:
   tags:
   - LineEnter
   - LineExit
-  - Line
+  - Enemy
   layers:
   - Default
   - TransparentFX

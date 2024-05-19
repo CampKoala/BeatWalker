@@ -11,7 +11,7 @@ namespace BeatWalker
         {
             if (other.CompareTag("LineEnter"))
             {
-                _tm.OnLineEnter();
+                _tm.OnLineEnter(other.GetComponentInParent<Line>().TimingType);
             }
 
             if (other.CompareTag("LineExit"))

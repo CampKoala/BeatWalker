@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using BeatWalker.Config;
+using BeatWalker.Utils;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,118 +11,146 @@ namespace BeatWalker
     public class TimingManager : MonoBehaviour
     {
         [SerializeField] private string song;
-        [SerializeField] private GameObject linePrefab;
-        [SerializeField] private int initLineCapacity;
-        [SerializeField] private float startY;
-        [SerializeField] private float endY;
-        [SerializeField] private float lineSpeed;
-
-        [SerializeField] private int earlyPoints;
-        [SerializeField] private int perfectPoints;
-        [SerializeField] private int latePoints;
-        
-        [SerializeField] private float earlyTime; // The amount of time before a line, which counts for early points.
-        [SerializeField] private float perfectTime; // The amount of time after early time finishes, that counts for perfect points.
-        [SerializeField] private float lateTime; // The amount of time after perfect time, that counts for late points.
-        
+        [SerializeField] private Player player;
+        [SerializeField] [Min(1)] private int reserveCapacity;
+        [SerializeField] [Min(1)] private int batchSize; // The number of lines/enemies to queue up per batch
+        [SerializeField] [Min(1)] private int minLinesQueued; // The minimum numbers of lines that are currently queued
+        [SerializeField] private GameConfig gameConfig;
+    
+        private SongTimingConfig _songTimingConfig;
         private Queue<Line> _reserveLines;
-        private float _travelTime;
-        private SongConfig _songConfig;
-        private int _index;
-        private float _startTime;
-        private float _lineReferenceTime;
-        private bool _isEnteringLine;
+        private Queue<Enemy> _reserveEnemies;
 
-        private float _lateTimeOffset;
-        private float _missedTimeOffset;
+        private float _startTime;
+        private int _index;
+
+        private Vector2 _playerPosition;
+        private float _enemySpeed;
+        private float _lineTravelTime;
         
+        private bool _isLineEnter;
+        private float _lineReferenceTime;
+        private SongTimingConfig.TimingType _currentLineType;
+        private bool _skipNextLineExit;
+
         private void Awake()
         {
-            _reserveLines = new Queue<Line>(Enumerable.Range(0, initLineCapacity).Select(_ => CreateNewLine())
-                .ToList());
-            
-            _songConfig = new SongConfig(song);
-            
-            var player = FindObjectOfType<Player>();
+            _songTimingConfig = new SongTimingConfig(song);
+            _playerPosition = player.transform.position;
+
+            _lineTravelTime = (gameConfig.LineStartY - _playerPosition.y) / gameConfig.LineSpeed;
+            _enemySpeed = (gameConfig.EnemySpawnRadius - gameConfig.EnemyDeathRadius) / _lineTravelTime;
+
             player.Init(this);
             
-            _travelTime = (startY - player.transform.position.y) / lineSpeed;
-            _lateTimeOffset = earlyTime + perfectTime;
-            _missedTimeOffset = _lateTimeOffset + lateTime;
+            _reserveLines = new Queue<Line>(Enumerable.Range(0, reserveCapacity).Select(_ => CreateNewLine()));
+            _reserveEnemies = new Queue<Enemy>(Enumerable.Range(0, reserveCapacity).Select(_ => CreateNewEnemy()));
         }
 
         private void Start()
         {
             _startTime = Time.timeSinceLevelLoad;
+            QueueNextLines();
         }
 
-        private void Update()
+        private void QueueNextLines()
         {
-            if (_reserveLines.Count > 0 && _index < _songConfig.Count)
+            for (var i = 0; i < batchSize; ++i)
             {
+                if (_index >= _songTimingConfig.Count || _reserveEnemies.Count <= 0 || _reserveLines.Count <= 0)
+                    break;
+
                 StartCoroutine(NextLine());
             }
         }
 
         private IEnumerator NextLine()
         {
-            if (_index >= _songConfig.Count)
-                yield break;
-
-            var nextTiming = _songConfig[_index++];
+            var timing = _songTimingConfig[_index++];
             var line = _reserveLines.Dequeue();
+            var enemy = _reserveEnemies.Dequeue();
 
-            yield return new WaitForSeconds(Mathf.Clamp(nextTiming.StartTime - Time.timeSinceLevelLoad - _startTime - _travelTime, 0.0f, float.MaxValue));
-            line.Go(nextTiming.Duration);
+            line.Prepare(timing, enemy);
+            enemy.Prepare(Vector2Utils.FromPolar(_playerPosition, gameConfig.EnemySpawnRadius, gameConfig.EnemyAngle * (float) timing.Type));
+
+            yield return new WaitForSeconds(Mathf.Clamp(
+                timing.StartTime - Time.timeSinceLevelLoad - _startTime - _lineTravelTime, 0.0f, float.MaxValue));
+            enemy.Go();
+            line.Go();
         }
-        
-        public void NotGo(Line line)
+
+        public void Return(Line line)
         {
             _reserveLines.Enqueue(line);
+
+            if (reserveCapacity - _reserveLines.Count <= minLinesQueued)
+                QueueNextLines();
         }
+
+        public void Return(Enemy enemy) => _reserveEnemies.Enqueue(enemy);
 
         private Line CreateNewLine()
         {
-            var obj = Instantiate(linePrefab);
+            var obj = Instantiate(gameConfig.LinePrefab);
             var line = obj.GetComponent<Line>();
-            line.Init(this, startY, endY, lineSpeed, earlyTime, earlyTime + perfectTime + lateTime);
+            line.Init(this, gameConfig.TapLineLength, gameConfig.LineStartY, gameConfig.LineEndY, gameConfig.LineSpeed, gameConfig.MissedTimeOffset);
             return line;
         }
 
-        public void OnLineEnter()
+        private Enemy CreateNewEnemy()
         {
-            _isEnteringLine = true;
-            _lineReferenceTime = Time.timeSinceLevelLoad;
+            var obj = Instantiate(gameConfig.EnemyPrefab);
+            var enemy = obj.GetComponent<Enemy>();
+            enemy.Init(this, _playerPosition, _enemySpeed);
+            return enemy;
         }
- 
+
+        public void OnLineEnter(SongTimingConfig.TimingType type)
+        {
+            _isLineEnter = true;
+            _lineReferenceTime = Time.timeSinceLevelLoad;
+            _currentLineType = type;
+        }
+
         public void OnLineExit()
         {
-            _isEnteringLine = false;
+            if (_skipNextLineExit)
+            {
+                _skipNextLineExit = false;
+                return;
+            }
+            
+            _isLineEnter = false;
             _lineReferenceTime = Time.timeSinceLevelLoad;
         }
 
         public void OnAttack(InputValue button)
         {
             var attackTime = Time.timeSinceLevelLoad - _lineReferenceTime;
-
-            if ((_isEnteringLine && !button.isPressed) || (!_isEnteringLine && button.isPressed) || attackTime > _missedTimeOffset)
+            
+            // Ignore Invalid Inputs
+            if (_isLineEnter != button.isPressed || (_currentLineType != SongTimingConfig.TimingType.Hold && !button.isPressed))
+                return;
+            
+            if (attackTime > gameConfig.MissedTimeOffset)
             {
-                Debug.Log("Missed");
+                _skipNextLineExit = _isLineEnter && _currentLineType == SongTimingConfig.TimingType.Hold;
+                Debug.Log($"Missed { (_isLineEnter ? "Line Enter": "Line Exit") }");
                 return;
             }
-            
-            if (attackTime > _lateTimeOffset)
+
+            if (attackTime > gameConfig.LateTimeOffset)
             {
                 Debug.Log("Late");
                 return;
             }
-                
-            if (attackTime > earlyTime)
+
+            if (attackTime > gameConfig.EarlyTime)
             {
                 Debug.Log("Perfect");
                 return;
             }
-                
+
             Debug.Log("Early");
         }
     }

@@ -579,17 +579,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   song: Songs/Song1
-  linePrefab: {fileID: 4971406917872013032, guid: 090ddd487bea49c4798076e3c460b478, type: 3}
-  initLineCapacity: 5
-  startY: 6
-  endY: -6
-  lineSpeed: 2
-  earlyPoints: 0
-  perfectPoints: 0
-  latePoints: 0
-  earlyTime: 0.25
-  perfectTime: 0.25
-  lateTime: 0.25
+  player: {fileID: 1183275703}
+  reserveCapacity: 10
+  batchSize: 5
+  minLinesQueued: 2
+  gameConfig: {fileID: 11400000, guid: fbdcf03e5f2283149a26cd25a278a804, type: 2}
 --- !u!4 &1543040891
 Transform:
   m_ObjectHideFlags: 0
