@@ -58,12 +58,6 @@ namespace BeatWalker
                 Return();
         }
 
-        public void OnDeathAnimationFinished()
-        {
-            _animator.SetBool(Die, false);
-            Return();
-        }
-
         public void OnDamage()
         {
             switch (Type)
@@ -76,13 +70,22 @@ namespace BeatWalker
                     _animator.SetBool(Hit, true);
                     _isGoing = false;
                     break;                
-                case EnemyType.Hold when !_isGoing:
-                    _animator.SetBool(Hit, false);
-                    _animator.SetBool(Die, true);
-                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        public void OnStopDamage(bool shouldDie)
+        {
+            _animator.SetBool(Hit, false);
+            _animator.SetBool(Die, shouldDie);
+            _isGoing = !shouldDie;
+        }
+        
+        public void OnDeathAnimationFinished()
+        {
+            _animator.SetBool(Die, false);
+            Return();
         }
     }
 }

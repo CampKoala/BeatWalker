@@ -74,7 +74,7 @@ namespace BeatWalker
             enemy.Prepare(Vector2Utils.FromPolar(_playerPosition, config.EnemySpawnRadius, config.EnemyAngle * (float) timing.Type));
 
             yield return new WaitForSeconds(Mathf.Clamp(
-                timing.StartTime - Time.timeSinceLevelLoad - _startTime - _lineTravelTime, 0.0f, float.MaxValue));
+                (timing.StartTime - _lineTravelTime) - (Time.timeSinceLevelLoad - _startTime), 0.0f, float.MaxValue));
             enemy.Go();
             line.Go();
         }
@@ -83,6 +83,16 @@ namespace BeatWalker
         {
             _reserveLines.Enqueue(line);
 
+            // #######################################################################################
+            // FIXME: Temporarily Restarting Level !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // #######################################################################################
+            if (_index >= _songTimingConfig.Count && _reserveLines.Count == reserveCapacity - 1)
+            {
+                _startTime = Time.timeSinceLevelLoad + _lineTravelTime;
+                _index = 0;
+            }
+            // #######################################################################################
+            
             if (reserveCapacity - _reserveLines.Count <= minLinesQueued)
                 QueueNextLines();
         }

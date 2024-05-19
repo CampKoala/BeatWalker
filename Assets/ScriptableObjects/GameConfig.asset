@@ -18,10 +18,10 @@ MonoBehaviour:
   linePrefab: {fileID: 4971406917872013032, guid: 090ddd487bea49c4798076e3c460b478, type: 3}
   tapLineLength: 0.5
   lineStartY: 6
-  lineEndY: -6
+  lineEndY: -10
   lineSpeed: 4
-  earlyTime: 0.25
-  perfectTime: 0.25
-  lateTime: 0.25
+  earlyTime: 0.1
+  perfectTime: 0.1
+  lateTime: 0.1
   holdEnemy: {fileID: 11400000, guid: 152a609c6ce6589499445b27403be529, type: 2}
   tapEnemy: {fileID: 11400000, guid: 38c1b02d994617249a58f4afe862dc20, type: 2}

@@ -1,10 +1,5 @@
 StartTime,Duration,Type
-5.0,0.0,LeftTap
-10.0,0.0,RightTap
-15.0,1.0,Hold
-20.0,0.0,LeftTap
-25.0,0.0,RightTap
-30.0,1.0,Hold
-35.0,0.0,LeftTap
-40.0,0.0,RightTap
-45.0,1.0,Hold
+4.0,0.0,LeftTap
+4.2,0.0,RightTap
+5.0,1.0,Hold
+7.0,0.0,LeftTap

@@ -426,7 +426,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: 0.31275755}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -437,7 +437,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 1, y: 0.072152495}
   m_EdgeRadius: 0
 --- !u!50 &1183275705
 Rigidbody2D:
@@ -634,7 +634,7 @@ MonoBehaviour:
   player: {fileID: 1183275703}
   reserveCapacity: 10
   batchSize: 5
-  minLinesQueued: 2
+  minLinesQueued: 5
   gameConfig: {fileID: 11400000, guid: fbdcf03e5f2283149a26cd25a278a804, type: 2}
 --- !u!4 &1543040891
 Transform:

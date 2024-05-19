@@ -21,7 +21,7 @@ namespace BeatWalker
         private bool _isGoing;
 
         public Enemy Enemy { get; private set; }
-        public SongTimingConfig.TimingType TimingType { get; private set; }
+        public SongTimingConfig.TimingType Type { get; private set; }
 
         public void Init(TimingManager timingManager, float tapLength, float startY, float endY, float speed,
             float reactionTime)
@@ -64,9 +64,11 @@ namespace BeatWalker
 
         public void Prepare(SongTimingConfig.Timing timing, Enemy enemy)
         {
+            Debug.Assert(enemy, "An enemy was not set for this line");
             Enemy = enemy;
-            TimingType = timing.Type;
-            var length = TimingType switch
+            
+            Type = timing.Type;
+            var length = Type switch
             {
                 SongTimingConfig.TimingType.Hold => _speed * timing.Duration,
                 SongTimingConfig.TimingType.LeftTap => _tapLength,
@@ -74,7 +76,7 @@ namespace BeatWalker
                 _ => throw new ArgumentOutOfRangeException()
             };
             UpdateTransform(length);
-            UpdateColliders(TimingType, length);
+            UpdateColliders(Type, length);
             gameObject.SetActive(true);
         }
 
@@ -111,9 +113,11 @@ namespace BeatWalker
 
         private void Return()
         {
+            Debug.Assert(_isGoing, "A line should only be returned if it is going");
+            Debug.Assert(!Enemy.isActiveAndEnabled, "Enemy should not be active by the time we reach here");
+            Enemy = null;
             gameObject.SetActive(false);
             _tm.Return(this);
-            Enemy = null;
             _isGoing = false;
         }
     }
