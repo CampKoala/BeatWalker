@@ -63,8 +63,6 @@ namespace BeatWalker
         
         private void OnLineEnter(Line line)
         {
-            Debug.Log("New Line");
-            
             _isLineEnter = true;
             _lineReferenceTime = Time.timeSinceLevelLoad;
             _lines.Enqueue(line);
