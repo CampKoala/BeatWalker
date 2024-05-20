@@ -1,54 +1,28 @@
 using System;
 using System.Linq;
+using BeatWalker.Utils;
 
-namespace BeatWalker.Utils
+namespace BeatWalker.Config
 {
     public class SongTimingConfig
     {
-        private const string StartTimeHeader = "StartTime";
-        private const string DurationHeader = "Duration";
-        private const string TypeHeader = "Type";
-        private readonly Timing[] _timings;
+        public const string TimeHeader = "Time";
+        public const string DurationHeader = "Duration";
+        public const string TypeHeader = "Type";
+        public const string IndexField = "Index";
+        public static readonly string Header = $"{TimeHeader},{DurationHeader},{TypeHeader}";
+        
+        private readonly SongTiming[] _timings;
 
-        public Timing this[int i] => _timings[i];
+        public SongTiming this[int i] => _timings[i];
         public int Count => _timings.Length;
 
-        public SongTimingConfig(string file)
+        public SongTimingConfig(string song)
         {
-            _timings = CsvReader.Read(file)
-                .Select(l => new Timing((float)l[StartTimeHeader], (float)l[DurationHeader], (string)l[TypeHeader]))
-                .OrderBy(t => t.StartTime)
+            _timings = CsvReader.Read($"Songs/{song}")
+                .Select(l => new SongTiming(Convert.ToInt32(l[IndexField]), Convert.ToSingle(l[TimeHeader]), Convert.ToSingle(l[DurationHeader]), (string)l[TypeHeader]))
+                .OrderBy(t => t.Time)
                 .ToArray();
-        }
-
-        public class Timing
-        {
-            public Timing(float startTime, float duration, string type)
-            {
-                if (duration < 0) throw new ArgumentOutOfRangeException(nameof(duration));
-                if (startTime < 0) throw new ArgumentOutOfRangeException(nameof(startTime));
-
-                StartTime = startTime;
-                Duration = duration;
-                Type = type.ToLower() switch
-                {
-                    "lefttap" => TimingType.LeftTap,
-                    "righttap" => TimingType.RightTap, 
-                    "hold" => TimingType.Hold,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-            }
-
-            public float StartTime { get; }
-            public float Duration { get; }
-            public TimingType Type { get; }
-        }
-
-        public enum TimingType
-        {
-            LeftTap = -1,
-            RightTap = 1,
-            Hold = 0,
         }
     }
 }

@@ -45,6 +45,8 @@ namespace BeatWalker.Utils
                     entry[header[j]] = finalvalue;
                 }
 
+                entry["Index"] = i;
+
                 list.Add(entry);
             }
 

@@ -1,5 +1,5 @@
 using System;
-using BeatWalker.Utils;
+using BeatWalker.Config;
 using UnityEngine;
 
 namespace BeatWalker
@@ -21,7 +21,8 @@ namespace BeatWalker
         private bool _isGoing;
 
         public Enemy Enemy { get; private set; }
-        public SongTimingConfig.TimingType Type { get; private set; }
+        public SongTimingType Type { get; private set; }
+        public int TimingIndex { get; private set; }
 
         public void Init(TimingManager timingManager, float tapLength, float startY, float endY, float speed,
             float reactionTime)
@@ -62,17 +63,18 @@ namespace BeatWalker
             _transform.position = Vector2.MoveTowards(current, _endPosition, _speed * Time.deltaTime);
         }
 
-        public void Prepare(SongTimingConfig.Timing timing, Enemy enemy)
+        public void Prepare(SongTiming songTiming, Enemy enemy)
         {
             Debug.Assert(enemy, "An enemy was not set for this line");
             Enemy = enemy;
             
-            Type = timing.Type;
+            Type = songTiming.Type;
+            TimingIndex = songTiming.Index;
             var length = Type switch
             {
-                SongTimingConfig.TimingType.Hold => _speed * timing.Duration,
-                SongTimingConfig.TimingType.LeftTap => _tapLength,
-                SongTimingConfig.TimingType.RightTap => _tapLength,
+                SongTimingType.Hold => _speed * songTiming.Duration,
+                SongTimingType.LeftTap => _tapLength,
+                SongTimingType.RightTap => _tapLength,
                 _ => throw new ArgumentOutOfRangeException()
             };
             UpdateTransform(length);
@@ -83,11 +85,11 @@ namespace BeatWalker
         private void UpdateTransform(float length)
         {
             _transform.localScale = new Vector2(_transform.localScale.x, length);
-            _transform.position = new Vector2(0, _startY + length);
+            _transform.position = new Vector2(0, _startY + length / 2);
             _endPosition = new Vector2(0, _endY - length / 2);
         }
         
-        private void UpdateColliders(SongTimingConfig.TimingType type, float length)
+        private void UpdateColliders(SongTimingType type, float length)
         {
             /* Note: Need to scale down the size because scaling the gameObject also scales the
              * colliders and the offset can be fixed to 0.5 because scaling the parent will
@@ -96,7 +98,7 @@ namespace BeatWalker
             _lineEnterCollider.size = new Vector2(1, _reactionTime * _speed / length);
             _lineExitCollider.size = new Vector2(1, _reactionTime * _speed / length);
 
-            if (type == SongTimingConfig.TimingType.Hold)
+            if (type == SongTimingType.Hold)
             {
                 _lineEnterCollider.offset = new Vector2(0, -0.5f);
                 _lineExitCollider.offset = new Vector2(0, 0.5f);
@@ -111,11 +113,9 @@ namespace BeatWalker
         
         public void Go() => _isGoing = true;
 
-        private void Return()
+        public void Return()
         {
-            Debug.Assert(_isGoing, "A line should only be returned if it is going");
-            Debug.Assert(!Enemy.isActiveAndEnabled, "Enemy should not be active by the time we reach here");
-            Enemy = null;
+            Debug.Assert(_isGoing, "A line should only be returned if it was going");
             gameObject.SetActive(false);
             _tm.Return(this);
             _isGoing = false;

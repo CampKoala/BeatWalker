@@ -5,6 +5,9 @@ namespace BeatWalker.Config
     [CreateAssetMenu(fileName = "GameConfig", menuName = "ScriptableObjects/GameConfig", order = 1)]
     public class GameConfig : ScriptableObject
     {
+        [SerializeField] private float songDelay;
+        public float SongDelay => songDelay;
+        
         [SerializeField] private int earlyPoints;
         public int EarlyPoints => earlyPoints;
         

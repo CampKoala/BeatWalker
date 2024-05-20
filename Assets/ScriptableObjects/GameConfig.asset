@@ -12,16 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 071391f0db184a75b008dc8dd571c510, type: 3}
   m_Name: GameConfig
   m_EditorClassIdentifier: 
+  songDelay: 3
   earlyPoints: 0
   perfectPoints: 0
   latePoints: 0
   linePrefab: {fileID: 4971406917872013032, guid: 090ddd487bea49c4798076e3c460b478, type: 3}
-  tapLineLength: 0.5
+  tapLineLength: 0.3
   lineStartY: 6
   lineEndY: -10
-  lineSpeed: 4
+  lineSpeed: 3
   earlyTime: 0.1
-  perfectTime: 0.1
+  perfectTime: 0.2
   lateTime: 0.1
   holdEnemy: {fileID: 11400000, guid: 152a609c6ce6589499445b27403be529, type: 2}
   tapEnemy: {fileID: 11400000, guid: 38c1b02d994617249a58f4afe862dc20, type: 2}

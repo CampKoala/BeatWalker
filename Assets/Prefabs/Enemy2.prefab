@@ -11,10 +11,10 @@ GameObject:
   - component: {fileID: 4357046431414224918}
   - component: {fileID: 5184949049137208598}
   - component: {fileID: 7644346102114459051}
-  - component: {fileID: 7103694008913651525}
-  - component: {fileID: 7057110917016797484}
-  - component: {fileID: 2530514025261431069}
   - component: {fileID: 2326721651355745984}
+  - component: {fileID: 7057110917016797484}
+  - component: {fileID: 6876960304413206156}
+  - component: {fileID: 7103694008913651525}
   m_Layer: 0
   m_Name: Enemy2
   m_TagString: Enemy
@@ -110,7 +110,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &7103694008913651525
+--- !u!114 &2326721651355745984
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -119,7 +119,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7833092012710998899}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 85db7223208bb0b4290c6b064d57b472, type: 3}
+  m_Script: {fileID: 11500000, guid: 44142419377a54a888bc02a1d67e01f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!61 &7057110917016797484
@@ -167,7 +167,7 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.5804996, y: 0.5804998}
   m_EdgeRadius: 0
---- !u!50 &2530514025261431069
+--- !u!50 &6876960304413206156
 Rigidbody2D:
   serializedVersion: 4
   m_ObjectHideFlags: 0
@@ -194,7 +194,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 0
---- !u!114 &2326721651355745984
+--- !u!114 &7103694008913651525
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -203,6 +203,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 7833092012710998899}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 44142419377a54a888bc02a1d67e01f2, type: 3}
+  m_Script: {fileID: 11500000, guid: 85db7223208bb0b4290c6b064d57b472, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

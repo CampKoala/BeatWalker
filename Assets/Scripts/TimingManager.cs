@@ -12,11 +12,13 @@ namespace BeatWalker
     {
         [SerializeField] private string song;
         [SerializeField] private Player player;
+        [SerializeField] private Target target;
         [SerializeField] [Min(1)] private int reserveCapacity;
         [SerializeField] [Min(1)] private int batchSize; // The number of lines/enemies to queue up per batch
         [SerializeField] [Min(1)] private int minLinesQueued; // The minimum numbers of lines that are currently queued
         [SerializeField] private GameConfig gameConfig;
-    
+        [SerializeField] private AudioSource audioSource;
+        
         private SongTimingConfig _songTimingConfig;
         private Queue<Line> _reserveLines;
         private Queue<Enemy> _reserveTapEnemies;
@@ -25,56 +27,81 @@ namespace BeatWalker
         private float _startTime;
         private int _index;
 
+        private Vector2 _targetPosition;
         private Vector2 _playerPosition;
         private float _lineTravelTime;
-
+        
+        public float CurrentTime => Time.timeSinceLevelLoad - _startTime;
+        
         private void Awake()
         {
             _songTimingConfig = new SongTimingConfig(song);
-            _playerPosition = player.transform.position;
-            _lineTravelTime = (gameConfig.LineStartY - _playerPosition.y) / gameConfig.LineSpeed;
-
-            player.Init(gameConfig);
+            target.Init(this, gameConfig);
             
+            _playerPosition = player.transform.position;
+            _targetPosition = target.transform.position;
+            _lineTravelTime = (gameConfig.LineStartY - _targetPosition.y) / gameConfig.LineSpeed;
             _reserveLines = new Queue<Line>(Enumerable.Range(0, reserveCapacity).Select(_ => CreateNewLine()));
-            _reserveTapEnemies = new Queue<Enemy>(Enumerable.Range(0, reserveCapacity).Select(_ => CreateNewEnemy(gameConfig.TapEnemy)));
-            _reserveHoldEnemies = new Queue<Enemy>(Enumerable.Range(0, reserveCapacity).Select(_ => CreateNewEnemy(gameConfig.HoldEnemy)));
+            _reserveTapEnemies = new Queue<Enemy>(Enumerable.Range(0, reserveCapacity)
+                .Select(_ => CreateNewEnemy(gameConfig.TapEnemy)));
+            _reserveHoldEnemies = new Queue<Enemy>(Enumerable.Range(0, reserveCapacity)
+                .Select(_ => CreateNewEnemy(gameConfig.HoldEnemy)));
         }
 
-        private void Start()
+        public void StartPlaying()
         {
+            audioSource.Play();
             _startTime = Time.timeSinceLevelLoad;
             QueueNextLines();
         }
 
         private void QueueNextLines()
         {
+            if (_index >= _songTimingConfig.Count && _reserveLines.Count == reserveCapacity)
+            {
+                Debug.Log("End of Song");
+                return;
+            }
+    
+            if (reserveCapacity - _reserveLines.Count > minLinesQueued)
+                return;
+            
             for (var i = 0; i < batchSize; ++i)
             {
-                if (_index >= _songTimingConfig.Count || _reserveHoldEnemies.Count <= 0 || _reserveTapEnemies.Count <= 0 || _reserveLines.Count <= 0)
-                    break;
+#if UNITY_EDITOR
+                while (_index < _songTimingConfig.Count && _songTimingConfig[_index].Time < _lineTravelTime)
+                {
+                    Debug.LogWarning($"Skipping Line {_index}, Time: {_songTimingConfig[_index].Time}, Line Travel Time: {_lineTravelTime}");
+                    _index++;
+                }
+#endif
 
-                StartCoroutine(NextLine());
+                if (_index >= _songTimingConfig.Count)
+                    break;
+                
+                Debug.Assert(_reserveHoldEnemies.Count > 0 && _reserveTapEnemies.Count > 0 && _reserveLines.Count > 0, "Need to increase reserve objects");
+                StartCoroutine(NextLine(_songTimingConfig[_index++]));
             }
         }
 
-        private IEnumerator NextLine()
+        private IEnumerator NextLine(SongTiming timing)
         {
-            var timing = _songTimingConfig[_index++];
             var line = _reserveLines.Dequeue();
             var (enemy, config) = timing.Type switch
             {
-                SongTimingConfig.TimingType.Hold => (_reserveHoldEnemies.Dequeue(), gameConfig.HoldEnemy),
-                SongTimingConfig.TimingType.LeftTap => (_reserveTapEnemies.Dequeue(), gameConfig.TapEnemy),
-                SongTimingConfig.TimingType.RightTap => (_reserveTapEnemies.Dequeue(), gameConfig.TapEnemy),
+                SongTimingType.Hold => (_reserveHoldEnemies.Dequeue(), gameConfig.HoldEnemy),
+                SongTimingType.LeftTap => (_reserveTapEnemies.Dequeue(), gameConfig.TapEnemy),
+                SongTimingType.RightTap => (_reserveTapEnemies.Dequeue(), gameConfig.TapEnemy),
                 _ => throw new ArgumentOutOfRangeException()
             };
                 
-            line.Prepare(timing, enemy);
             enemy.Prepare(Vector2Utils.FromPolar(_playerPosition, config.EnemySpawnRadius, config.EnemyAngle * (float) timing.Type));
-
-            yield return new WaitForSeconds(Mathf.Clamp(
-                (timing.StartTime - _lineTravelTime) - (Time.timeSinceLevelLoad - _startTime), 0.0f, float.MaxValue));
+            line.Prepare(timing, enemy);
+            
+            var waitTime = timing.Time - _lineTravelTime - CurrentTime;
+            Debug.Assert(waitTime > 0.0f);
+            yield return new WaitForSeconds(waitTime);
+            
             enemy.Go();
             line.Go();
         }
@@ -82,19 +109,7 @@ namespace BeatWalker
         public void Return(Line line)
         {
             _reserveLines.Enqueue(line);
-
-            // #######################################################################################
-            // FIXME: Temporarily Restarting Level !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // #######################################################################################
-            if (_index >= _songTimingConfig.Count && _reserveLines.Count == reserveCapacity - 1)
-            {
-                _startTime = Time.timeSinceLevelLoad + _lineTravelTime;
-                _index = 0;
-            }
-            // #######################################################################################
-            
-            if (reserveCapacity - _reserveLines.Count <= minLinesQueued)
-                QueueNextLines();
+            QueueNextLines();
         }
 
         public void Return(Enemy enemy)
