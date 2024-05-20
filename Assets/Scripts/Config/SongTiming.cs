@@ -1,5 +1,4 @@
 using System;
-using BeatWalker.Utils;
 
 namespace BeatWalker.Config
 {

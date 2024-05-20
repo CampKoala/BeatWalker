@@ -12,12 +12,14 @@ namespace BeatWalker
         
         private GameConfig _gameConfig;
         private TimingManager _tm;
+        private GameManager _gm;
 
         private readonly List<(Line line, float time, bool isEnter)> _lines = new();
         private Line _currentLine;
 
-        public void Init(TimingManager timingManager, GameConfig config)
+        public void Init(GameManager gameManager, TimingManager timingManager, GameConfig config)
         {
+            _gm = gameManager;
             _tm = timingManager;
             _gameConfig = config;
         }
@@ -58,6 +60,9 @@ namespace BeatWalker
 
         public void OnAttack(InputValue button)
         {
+            if (!_tm.SongStarted)
+                return;
+            
             Line line;
             float referenceTime;
             bool isLineEnter;
@@ -85,11 +90,10 @@ namespace BeatWalker
             }
             else
             {
-                // TODO: This looks gross, make it better
                 if (_lines.Count == 0)
                 {
                     if (button.isPressed)
-                        Debug.Log("Missed, no line currently");
+                        _gm.AddPoints(-_gameConfig.MissedPoints);
                     return;
                 }
                 
@@ -102,20 +106,12 @@ namespace BeatWalker
                     if (_lines.Count == 0)
                     {
                         if (button.isPressed)
-                            Debug.Log("Missed, no line currently");
+                            _gm.AddPoints(-_gameConfig.MissedPoints);
                         return;
                     }
                     (line, referenceTime, isLineEnter) = _lines[0];
                 }
-
-                if (_lines.Count == 0)
-                {
-                    if (button.isPressed)
-                        Debug.Log("Missed, no line currently");
-                    return;
-                }
                 
-                (line, referenceTime, isLineEnter) = _lines[0];
                 Debug.Assert(isLineEnter, $"[Line {line.TimingIndex}] This should always be a line enter");
             }
     
@@ -130,6 +126,7 @@ namespace BeatWalker
                 Debug.Log($"[Line {line.TimingIndex}] Missed {(isLineEnter ? "Line Enter" : "Line Exit")}");
                 if (!isLineEnter) HandleReleaseHold(line, true);
                 _currentLine = null;
+                _gm.AddPoints(-_gameConfig.MissedPoints);
             }
             else
             {
@@ -186,15 +183,15 @@ namespace BeatWalker
         {
             if (attackTime < _gameConfig.EarlyTime)
             {
-                // Debug.Log("Early");
+                _gm.AddPoints(_gameConfig.EarlyPoints);
             }
             else if (attackTime < _gameConfig.LateTimeOffset)
             {
-                // Debug.Log("Perfect");
+                _gm.AddPoints(_gameConfig.PerfectPoints);
             }
             else
             {
-                // Debug.Log("Late");
+                _gm.AddPoints(_gameConfig.LatePoints);
             }
         }
     }

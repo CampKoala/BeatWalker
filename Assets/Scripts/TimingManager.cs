@@ -11,6 +11,7 @@ namespace BeatWalker
     public class TimingManager : MonoBehaviour
     {
         [SerializeField] private string song;
+        [SerializeField] private GameManager gameManager;
         [SerializeField] private Player player;
         [SerializeField] private Target target;
         [SerializeField] [Min(1)] private int reserveCapacity;
@@ -30,13 +31,14 @@ namespace BeatWalker
         private Vector2 _targetPosition;
         private Vector2 _playerPosition;
         private float _lineTravelTime;
-        
+
         public float CurrentTime => Time.timeSinceLevelLoad - _startTime;
-        
+        public bool SongStarted { get; private set; } = false;
+
         private void Awake()
         {
             _songTimingConfig = new SongTimingConfig(song);
-            target.Init(this, gameConfig);
+            target.Init(gameManager, this, gameConfig);
             
             _playerPosition = player.transform.position;
             _targetPosition = target.transform.position;
@@ -50,6 +52,7 @@ namespace BeatWalker
 
         public void StartPlaying()
         {
+            SongStarted = true;
             audioSource.Play();
             _startTime = Time.timeSinceLevelLoad;
             QueueNextLines();
@@ -59,7 +62,7 @@ namespace BeatWalker
         {
             if (_index >= _songTimingConfig.Count && _reserveLines.Count == reserveCapacity)
             {
-                Debug.Log("End of Song");
+                gameManager.GameCompleted(audioSource.clip.length - audioSource.time);
                 return;
             }
     

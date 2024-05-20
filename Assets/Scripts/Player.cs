@@ -1,14 +1,13 @@
 using System;
-using System.Collections.Generic;
 using BeatWalker.Config;
-using BeatWalker.Utils;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace BeatWalker
 {
     public class Player : MonoBehaviour
     {
+        [SerializeField] private GameManager gameManager;
+        
         private static readonly int HitTrigger = Animator.StringToHash("Hit");
         private static readonly int HoldBool = Animator.StringToHash("Hold");
         private static readonly int LeftTapTrigger = Animator.StringToHash("LeftTap");
@@ -24,7 +23,10 @@ namespace BeatWalker
         private void OnCollisionEnter2D(Collision2D other)
         {
             if (other.collider.CompareTag("Enemy"))
+            {
                 _animator.SetTrigger(HitTrigger);
+                gameManager.DecrementHealth();
+            }
         }
 
         public void Hold(bool hold)
